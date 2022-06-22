@@ -26,4 +26,15 @@ jobs:
       - run:
           name: Run tests
           command: go test -v $(go list ./... | circleci tests split)
+      - setup_remote_docker:
+          version: 20.10.14
+          docker_layer_caching: true
+      - run: 
+          name: Build and push docker
+          command: |
+            TAG=$(git describe)
+            docker build -t $DOCKER_IMAGE:$TAG .
+            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker push CircleCI-Public/circleci-demo-docker:$TAG
+
 
