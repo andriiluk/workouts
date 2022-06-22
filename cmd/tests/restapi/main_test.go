@@ -1,14 +1,9 @@
 package main
 
 import (
-	"net/http"
-	"os"
 	"testing"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/andriiluk/workouts/internal"
-	"github.com/andriiluk/workouts/internal/musclesvc"
 	"github.com/andriiluk/workouts/internal/musclesvc/client"
 
 	"github.com/stretchr/testify/require"
@@ -16,10 +11,6 @@ import (
 
 func TestMuscleSvc(t *testing.T) {
 	const addr = "localhost:8080"
-
-	// for logrus logger in client
-	initLogger()
-	runMuscleSvc(addr)
 
 	t.Log("create new client")
 	cli, err := client.NewHTTPClient(addr)
@@ -82,33 +73,4 @@ func TestMuscleSvc(t *testing.T) {
 	m, err = cli.GetMuscle(id)
 	require.NoError(t, err, "get muscle")
 	require.Empty(t, m, "after delete request")
-}
-
-func runMuscleSvc(addr string) {
-	log.Debug("Run service...")
-
-	muscleStore := musclesvc.NewInMemStore()
-	muscleSvc := musclesvc.NewService(muscleStore)
-	muscleSvc = musclesvc.WithLoggingMidleware(muscleSvc)
-
-	muscleHandler := musclesvc.MakeHTTPHandler(muscleSvc)
-
-	go func() {
-		log.Fatal(http.ListenAndServe(addr, muscleHandler))
-	}()
-}
-
-func initLogger() {
-	// log.SetFormatter(&log.JSONFormatter{
-	// 	DisableTimestamp:  true,
-	// 	PrettyPrint:       true,
-	// 	DisableHTMLEscape: true,
-	// 	CallerPrettyfier: func(f *runtime.Frame) (function string, file string) {
-	// 		return "", fmt.Sprintf("%s:%d", f.File, f.Line)
-	// 	},
-	// })
-	log.SetOutput(os.Stdout)
-	log.SetLevel(log.InfoLevel)
-	log.SetReportCaller(true)
-	log.Debug("Logger initialized...")
 }

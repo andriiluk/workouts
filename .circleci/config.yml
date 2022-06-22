@@ -19,6 +19,11 @@ jobs:
           key: go-mod-v0-{{ checksum "go.sum" }}
           paths:
             - "/go/pkg/mod"
+      - run: 
+          name: Run service with default envs
+          command: make
+          background: true
       - run:
           name: Run tests
-          command: go test -v ./...
+          command: go test -v $(go list ./... | circleci tests split)
+

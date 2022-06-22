@@ -1,2 +1,2 @@
 run:
-	go run . run 
+	go run . run
