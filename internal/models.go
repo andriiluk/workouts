@@ -15,14 +15,14 @@ type Tag struct {
 type Params struct {
 	ID   int
 	Name string
-	Tags []*Tag
+	Tags []string
 }
 
 type Muscle struct {
-	ID          int    `json:"id,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Tags        []*Tag `json:"tags,omitempty"`
+	ID          int      `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
 }
 
 type Exercise struct {
@@ -45,6 +45,6 @@ type Routine struct {
 	ID          int        `json:"id,omitempty"`
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description,omitempty"`
-	Tags        []Tag      `json:"tags,omitempty"`
+	Tags        []*Tag     `json:"tags,omitempty"`
 	Workouts    []*Workout `json:"workouts,omitempty"`
 }
