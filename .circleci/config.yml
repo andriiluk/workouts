@@ -30,11 +30,11 @@ jobs:
           version: 20.10.14
           docker_layer_caching: true
       - run: 
-          name: Build and push docker
+          name: Build and push Docker image
           command: |
             TAG=$(git describe)
             docker build -t $DOCKER_IMAGE:$TAG .
-            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+            docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push CircleCI-Public/circleci-demo-docker:$TAG
 
 
