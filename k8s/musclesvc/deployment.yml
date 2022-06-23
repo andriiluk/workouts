@@ -29,7 +29,7 @@ spec:
           # - Each init container must complete successfully before the next one starts.
       containers:
       - name:  muscle-manager
-        image:  andrewlm/workouts:0.1.12
+        image:  andrewlm/workouts:0.1
         resources:
           requests:
             cpu: 100m
