@@ -42,6 +42,7 @@ jobs:
       - run:
           name: Tagged git repository
           command: |
-            git tag -a v0.
+            git tag -f v0.1-release
+            git push origin v0.1-release --force
 
 
