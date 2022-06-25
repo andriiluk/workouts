@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: muscle-manager
+  name: workout-manager
   namespace: default
 spec:
   selector:
-    app: muscle
+    app: workout
     svc: manager
   ports:
     - port: 8080

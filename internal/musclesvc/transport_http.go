@@ -101,9 +101,12 @@ func encodeError(_ context.Context, err error, w http.ResponseWriter) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(codeFrom(err))
-	json.NewEncoder(w).Encode(map[string]interface{}{
+
+	if e := json.NewEncoder(w).Encode(map[string]interface{}{
 		"error": err.Error(),
-	})
+	}); e != nil {
+		panic(e)
+	}
 }
 
 // DECODERS

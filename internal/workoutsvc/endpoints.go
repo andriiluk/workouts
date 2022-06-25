@@ -1,157 +1,158 @@
 package workoutsvc
 
-import (
-	"context"
-	"strings"
+// import (
+// 	"context"
+// 	"strings"
 
-	"github.com/andriiluk/workouts/internal"
-	"github.com/go-kit/kit/endpoint"
-)
+// 	"github.com/andriiluk/workouts/internal"
+// 	"github.com/go-kit/kit/endpoint"
+// )
 
-type Endpoints struct {
-	PostWorkout    endpoint.Endpoint
-	PutWorkout     endpoint.Endpoint
-	DeleteWorkout  endpoint.Endpoint
-	GetWorkout     endpoint.Endpoint
-	SearchWorkouts endpoint.Endpoint
-}
+// type Endpoints struct {
+// 	PostWorkout    endpoint.Endpoint
+// 	PutWorkout     endpoint.Endpoint
+// 	DeleteWorkout  endpoint.Endpoint
+// 	GetWorkout     endpoint.Endpoint
+// 	SearchWorkouts endpoint.Endpoint
+// }
 
-func MakeEndpoints(svc Service) *Endpoints {
-	return &Endpoints{
-		PostWorkout:    makePostWorkoutEndpoint(svc),
-		PutWorkout:     makePutWorkoutEndpoint(svc),
-		DeleteWorkout:  makeDeleteWorkoutEndpoint(svc),
-		GetWorkout:     makeGetWorkoutEndpoint(svc),
-		SearchWorkouts: makeSearchWorkoutEndpoint(svc),
-	}
-}
+// func MakeEndpoints(svc Service) *Endpoints {
+// 	return &Endpoints{
+// 		PostWorkout:    makePostWorkoutEndpoint(svc),
+// 		PutWorkout:     makePutWorkoutEndpoint(svc),
+// 		DeleteWorkout:  makeDeleteWorkoutEndpoint(svc),
+// 		GetWorkout:     makeGetWorkoutEndpoint(svc),
+// 		SearchWorkouts: makeSearchWorkoutEndpoint(svc),
+// 	}
+// }
 
-func makePostWorkoutEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		var resp PostWorkoutResponse
+// func makePostWorkoutEndpoint(svc Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		var resp PostWorkoutResponse
 
-		req := request.(PostWorkoutRequest)
+// 		req := request.(PostWorkoutRequest)
 
-		id, err := svc.AddWorkout(ctx, &internal.Workout{
-			Name:        req.Name,
-			Description: req.Description,
-			Tags:        req.Tags,
-		})
-		if err != nil {
-			resp.Err = err.Error()
-		}
+// 		id, err := svc.AddWorkout(ctx, &internal.Workout{
+// 			Name:        req.Name,
+// 			Description: req.Description,
+// 			Tags:        req.Tags,
+// 		})
+// 		if err != nil {
+// 			resp.Err = err.Error()
+// 		}
 
-		return PostWorkoutResponse{
-			ID: id,
-		}, nil
-	}
-}
+// 		return PostWorkoutResponse{
+// 			ID: id,
+// 		}, nil
+// 	}
+// }
 
-func makePutWorkoutEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(PutWorkoutRequest)
+// func makePutWorkoutEndpoint(svc Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+// 		req := request.(PutWorkoutRequest)
 
-		err = svc.PutWorkout(ctx, &internal.Workout{
-			ID:          req.ID,
-			Name:        req.Workout.Name,
-			Description: req.Workout.Description,
-			Tags:        req.Workout.Tags,
-		})
+// 		err = svc.PutWorkout(ctx, &internal.Workout{
+// 			ID:          req.ID,
+// 			Name:        req.Workout.Name,
+// 			Description: req.Workout.Description,
+// 			Tags:        req.Workout.Tags,
+// 		})
 
-		return defaultResponse{
-			Err: err.Error(),
-		}, nil
-	}
-}
+// 		return defaultResponse{
+// 			Err: err.Error(),
+// 		}, nil
+// 	}
+// }
 
-func makeDeleteWorkoutEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(DeleteWorkoutRequest)
-		resp := defaultResponse{}
+// func makeDeleteWorkoutEndpoint(svc Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
+// 		req := request.(DeleteWorkoutRequest)
+// 		resp := defaultResponse{}
 
-		var err error
-		switch {
-		case req.ID != 0:
-			err = svc.DeleteWorkoutByID(ctx, req.ID)
-		case strings.TrimSpace(req.Name) != "":
-			err = svc.DeleteWorkoutByName(ctx, req.Name)
-		}
+// 		var err error
 
-		if err != nil {
-			resp.Err = err.Error()
-		}
+// 		switch {
+// 		case req.ID != 0:
+// 			err = svc.DeleteWorkoutByID(ctx, req.ID)
+// 		case strings.TrimSpace(req.Name) != "":
+// 			err = svc.DeleteWorkoutByName(ctx, req.Name)
+// 		}
 
-		return resp, nil
-	}
-}
+// 		if err != nil {
+// 			resp.Err = err.Error()
+// 		}
 
-func makeGetWorkoutEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(getWorkoutRequest)
-		resp := getWorkoutResponse{}
+// 		return resp, nil
+// 	}
+// }
 
-		switch {
-		case req.ID != 0:
-			resp.Workout, resp.Err = svc.GetWorkoutByID(ctx, req.ID)
-		case strings.TrimSpace(req.Name) != "":
-			resp.Workout, resp.Err = svc.GetWorkoutByName(ctx, req.Name)
-		}
+// func makeGetWorkoutEndpoint(svc Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+// 		req := request.(getWorkoutRequest)
+// 		resp := getWorkoutResponse{}
 
-		return resp, nil
-	}
-}
+// 		switch {
+// 		case req.ID != 0:
+// 			resp.Workout, resp.Err = svc.GetWorkoutByID(ctx, req.ID)
+// 		case strings.TrimSpace(req.Name) != "":
+// 			resp.Workout, resp.Err = svc.GetWorkoutByName(ctx, req.Name)
+// 		}
 
-func makeSearchWorkoutEndpoint(svc Service) endpoint.Endpoint {
-	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(searchWorkoutsByTagsRequest)
-		resp := searchWorkoutsByTagsResponse{}
+// 		return resp, nil
+// 	}
+// }
 
-		resp.Workouts, resp.Err = svc.GetWorkoutsByTags(ctx, req.Tags...)
+// func makeSearchWorkoutEndpoint(svc Service) endpoint.Endpoint {
+// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+// 		req := request.(searchWorkoutsByTagsRequest)
+// 		resp := searchWorkoutsByTagsResponse{}
 
-		return resp, nil
-	}
-}
+// 		resp.Workouts, resp.Err = svc.GetWorkoutsByTags(ctx, req.Tags...)
 
-type PostWorkoutRequest struct {
-	Name        string          `json:"name,omitempty"`
-	Description string          `json:"description,omitempty"`
-	Tags        []*internal.Tag `json:"tags,omitempty"`
-}
+// 		return resp, nil
+// 	}
+// }
 
-type PostWorkoutResponse struct {
-	Err string `json:"err,omitempty"`
-	ID  int    `json:"id,omitempty"`
-}
+// type PostWorkoutRequest struct {
+// 	Name        string          `json:"name,omitempty"`
+// 	Description string          `json:"description,omitempty"`
+// 	Tags        []*internal.Tag `json:"tags,omitempty"`
+// }
 
-type PutWorkoutRequest struct {
-	ID      int
-	Workout internal.Workout
-}
+// type PostWorkoutResponse struct {
+// 	Err string `json:"err,omitempty"`
+// 	ID  int    `json:"id,omitempty"`
+// }
 
-type DeleteWorkoutRequest struct {
-	ID   int    `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+// type PutWorkoutRequest struct {
+// 	Workout internal.Workout
+// 	ID      int
+// }
 
-type getWorkoutRequest struct {
-	ID   int    `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
+// type DeleteWorkoutRequest struct {
+// 	Name string `json:"name,omitempty"`
+// 	ID   int    `json:"id,omitempty"`
+// }
 
-type getWorkoutResponse struct {
-	Err     error             `json:"err,omitempty"`
-	Workout *internal.Workout `json:"workouts,omitempty"`
-}
+// type getWorkoutRequest struct {
+// 	Name string `json:"name,omitempty"`
+// 	ID   int    `json:"id,omitempty"`
+// }
 
-type searchWorkoutsByTagsRequest struct {
-	Tags []*internal.Tag `json:"tags,omitempty"`
-}
+// type getWorkoutResponse struct {
+// 	Err     error             `json:"err,omitempty"`
+// 	Workout *internal.Workout `json:"workouts,omitempty"`
+// }
 
-type searchWorkoutsByTagsResponse struct {
-	Err      error               `json:"err,omitempty"`
-	Workouts []*internal.Workout `json:"workouts,omitempty"`
-}
+// type searchWorkoutsByTagsRequest struct {
+// 	Tags []*internal.Tag `json:"tags,omitempty"`
+// }
 
-type defaultResponse struct {
-	Err string `json:"err,omitempty"`
-}
+// type searchWorkoutsByTagsResponse struct {
+// 	Err      error               `json:"err,omitempty"`
+// 	Workouts []*internal.Workout `json:"workouts,omitempty"`
+// }
+
+// type defaultResponse struct {
+// 	Err string `json:"err,omitempty"`
+// }

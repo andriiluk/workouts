@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"os"
 	"runtime"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -27,8 +28,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	EnvLogLevel = "WORKOUTSVC_LOG_LEVEL"
+)
+
 // runCmd represents the run command
 var (
+	logLevels = map[string]log.Level{
+		"warn":  log.WarnLevel,
+		"info":  log.InfoLevel,
+		"debug": log.DebugLevel,
+	}
+
 	addr   string
 	runCmd = &cobra.Command{
 		Use:   "run",
@@ -39,9 +50,15 @@ var (
 	}
 )
 
+//nolint
 func init() {
 	rootCmd.AddCommand(runCmd)
-	runCmd.Flags().StringVarP(&addr, "addr", "a", ":8080", "-a localhost:8080")
+	runCmd.Flags().StringVarP(&addr, "addr", "a", ":8081", "-a localhost:8080")
+
+	lvl, ok := logLevels[strings.ToLower(os.Getenv(EnvLogLevel))]
+	if !ok {
+		lvl = log.InfoLevel
+	}
 
 	log.SetFormatter(&log.JSONFormatter{
 		DisableTimestamp:  true,
@@ -51,9 +68,12 @@ func init() {
 			return "", fmt.Sprintf("%s:%d", f.File, f.Line)
 		},
 	})
+
 	log.SetOutput(os.Stdout)
-	log.SetLevel(log.DebugLevel)
+	log.SetLevel(lvl)
 	log.SetReportCaller(true)
+
+	log.WithField("log_level", lvl).Info()
 }
 
 func RunWorkoutSvc() {

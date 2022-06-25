@@ -31,7 +31,7 @@ linters:
     - funlen
     - gas
     #- gochecknoglobals
-    - gochecknoinits
+    # - gochecknoinits
     - gocognit
     - goconst
     - gocritic
@@ -84,6 +84,9 @@ linters-settings:
   govet:
     check-shadowing: true
     enable-all: true
+    disable:
+      - fieldalignment
+
   dupl:
     # tokens count to trigger issue, 150 by default
     threshold: 110

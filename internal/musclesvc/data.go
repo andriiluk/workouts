@@ -14,8 +14,8 @@ type PostMuscleResponse struct {
 }
 
 type GetMuscleRequest struct {
-	ID   int    `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
+	ID   int    `json:"id,omitempty"`
 }
 
 type GetMuscleResponse struct {
@@ -24,13 +24,13 @@ type GetMuscleResponse struct {
 }
 
 type PutMuscleRequest struct {
-	ID     int              `json:"id,omitempty"`
 	Muscle *internal.Muscle `json:"muscle,omitempty"`
+	ID     int              `json:"id,omitempty"`
 }
 
 type DeleteMuscleRequest struct {
-	ID   int    `json:"id,omitempty"`
 	Name string `json:"name,omitempty"`
+	ID   int    `json:"id,omitempty"`
 }
 
 type SearchMusclesByTagsRequest struct {

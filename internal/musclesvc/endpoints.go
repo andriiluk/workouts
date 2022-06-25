@@ -3,11 +3,14 @@ package musclesvc
 import (
 	"context"
 	"errors"
+
 	"fmt"
+
 	"strings"
 
-	"github.com/andriiluk/workouts/internal"
 	"github.com/go-kit/kit/endpoint"
+
+	"github.com/andriiluk/workouts/internal"
 )
 
 var (
@@ -35,7 +38,12 @@ func MakeEndpoints(svc Service) *Endpoints {
 func makePostMuscleEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		var resp PostMuscleResponse
-		req := request.(PostMuscleRequest)
+
+		req, ok := request.(PostMuscleRequest)
+		if !ok {
+			return nil, fmt.Errorf("[%w] request exptected to be PostMuscleRequest", ErrBadRequest)
+		}
+
 		if strings.TrimSpace(req.Name) == "" {
 			return PostMuscleResponse{
 				Err: fmt.Sprintf("[%s]: 'Name'", ErrMissingRequiredParams),
@@ -51,14 +59,19 @@ func makePostMuscleEndpoint(svc Service) endpoint.Endpoint {
 		if err != nil {
 			resp.Err = err.Error()
 		}
+
 		resp.ID = id
+
 		return resp, nil
 	}
 }
 
 func makePutMuscleEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(PutMuscleRequest)
+		req, ok := request.(PutMuscleRequest)
+		if !ok {
+			return nil, ErrBadRequest
+		}
 
 		err = svc.PutMuscle(ctx, &internal.Muscle{
 			ID:          req.ID,
@@ -75,7 +88,11 @@ func makePutMuscleEndpoint(svc Service) endpoint.Endpoint {
 
 func makeDeleteMuscleEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(DeleteMuscleRequest)
+		req, ok := request.(DeleteMuscleRequest)
+		if !ok {
+			return nil, ErrBadRequest
+		}
+
 		resp := DefaultResponse{}
 
 		switch {
@@ -91,7 +108,11 @@ func makeDeleteMuscleEndpoint(svc Service) endpoint.Endpoint {
 
 func makeGetMuscleEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(GetMuscleRequest)
+		req, ok := request.(GetMuscleRequest)
+		if !ok {
+			return nil, ErrBadRequest
+		}
+
 		resp := GetMuscleResponse{}
 
 		switch {
@@ -107,7 +128,11 @@ func makeGetMuscleEndpoint(svc Service) endpoint.Endpoint {
 
 func makeSearchMuscleEndpoint(svc Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(SearchMusclesByTagsRequest)
+		req, ok := request.(SearchMusclesByTagsRequest)
+		if !ok {
+			return nil, fmt.Errorf("[%w]: request expected to be SearchMusclesByTagsRequest", ErrBadRequest)
+		}
+
 		resp := SearchMusclesByTagsResponse{}
 
 		resp.Muscles, resp.Err = svc.GetMusclesByTags(ctx, req.Tags...)

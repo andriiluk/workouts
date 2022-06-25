@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name:  muscle-manager
+  name:  workout-manager
   namespace: default
   labels:
-    app:  muscle
+    app:  workout
     svc: manager
 spec:
   selector:
     matchLabels:
-      app:  muscle
+      app:  workout
       svc: manager
   replicas: 2
   strategy:
@@ -20,15 +20,11 @@ spec:
   template:
     metadata:
       labels:
-        app:  muscle
+        app:  workout
         svc: manager
     spec:
-      # initContainers:
-        # Init containers are exactly like regular containers, except:
-          # - Init containers always run to completion.
-          # - Each init container must complete successfully before the next one starts.
       containers:
-      - name:  muscle-manager
+      - name:  workout-manager
         image:  andrewlm/workouts:0.1
         resources:
           requests:
@@ -39,4 +35,8 @@ spec:
             memory: 100Mi
         ports:
         - containerPort:  8080
+      envFrom:
+          - configMapRef: workouts-config
       restartPolicy: Always
+      
+    
