@@ -8,4 +8,4 @@ k8s-apply-muscle:
 	kubectl apply -f ./k8s/musclesvc
 
 argocd:
-	kubectl port-forward -n argocd svc/argocd-server 8080:443
+	kubectl port-forward -n argocd svc/argocd-server 9000:443

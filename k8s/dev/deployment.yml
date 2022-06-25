@@ -36,7 +36,8 @@ spec:
         ports:
         - containerPort:  8080
       envFrom:
-          - configMapRef: workouts-config
+      - configMapRef: 
+          name: workout-config
       restartPolicy: Always
       
     
