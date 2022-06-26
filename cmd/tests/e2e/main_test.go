@@ -12,6 +12,10 @@ import (
 func TestMuscleSvc(t *testing.T) {
 	const addr = "localhost:8080"
 
+	testMusclesEndpoints(t, addr)
+}
+
+func testMusclesEndpoints(t *testing.T, addr string) {
 	t.Log("create new client")
 	cli, err := client.NewHTTPClient(addr)
 	require.NoError(t, err)

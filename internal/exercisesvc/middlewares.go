@@ -104,13 +104,25 @@ func (l *LogginMiddleware) GetExerciseByName(ctx context.Context, name string) (
 }
 
 func (l *LogginMiddleware) GetExercisesByTags(ctx context.Context, tags ...string) (data []*internal.Exercise, err error) {
-	log.Debug("GetExerciseByTags", tags)
+	log.WithField("tags", tags).Debug("GetExerciseByTags")
 
 	defer func() {
 		log.WithFields(log.Fields{"data": data, "err": err}).Debug("get exercise by tags response")
 	}()
 
 	data, err = l.next.GetExercisesByTags(ctx, tags...)
+
+	return
+}
+
+func (l *LogginMiddleware) GetExercisesByMuscles(ctx context.Context, muscleNames ...string) (data []*internal.Exercise, err error) {
+	log.WithField("muscles", muscleNames).Debug("GetExercisesByMuscles")
+
+	defer func() {
+		log.WithFields(log.Fields{"data": data, "err": err}).Debug("get exercise by muscle response")
+	}()
+
+	data, err = l.next.GetExercisesByMuscles(ctx, muscleNames...)
 
 	return
 }

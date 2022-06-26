@@ -15,15 +15,15 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/andriiluk/workouts/internal"
-	"github.com/andriiluk/workouts/internal/musclesvc"
+	"github.com/andriiluk/workouts/internal/exercisesvc"
 )
 
-func MakeClientEndpoints(svcAddr string) (*musclesvc.Endpoints, error) {
+func MakeClientEndpoints(svcAddr string) (*exercisesvc.Endpoints, error) {
 	if !strings.HasPrefix(svcAddr, "http") {
 		svcAddr = "http://" + svcAddr
 	}
 
-	svcAddr += "/muscles"
+	svcAddr += "/exercises"
 
 	tgt, err := url.Parse(svcAddr)
 	if err != nil {
@@ -34,21 +34,21 @@ func MakeClientEndpoints(svcAddr string) (*musclesvc.Endpoints, error) {
 
 	log.WithFields(log.Fields{"url": tgt}).Debug("make client endpoints")
 
-	return &musclesvc.Endpoints{
-		PostMuscleEndpoint: httptransport.NewClient(
-			http.MethodPost, copyURL(tgt), encodeRequest, decodePostMuscleResponse, options...,
+	return &exercisesvc.Endpoints{
+		PostExerciseEndpoint: httptransport.NewClient(
+			http.MethodPost, copyURL(tgt), encodeRequest, decodePostExerciseResponse, options...,
 		).Endpoint(),
-		PutMuscleEndpoint: httptransport.NewClient(
-			http.MethodPut, copyURL(tgt), encodePutMuscleRequest, decodeDefaultResponse, options...,
+		PutExerciseEndpoint: httptransport.NewClient(
+			http.MethodPut, copyURL(tgt), encodePutExerciseRequest, decodeDefaultResponse, options...,
 		).Endpoint(),
-		DeleteMuscleEndpoint: httptransport.NewClient(
-			http.MethodDelete, copyURL(tgt), encodeDeleteMuscleRequest, decodeDefaultResponse, options...,
+		DeleteExerciseEndpoint: httptransport.NewClient(
+			http.MethodDelete, copyURL(tgt), encodeDeleteExerciseRequest, decodeDefaultResponse, options...,
 		).Endpoint(),
-		GetMuscleEndpoint: httptransport.NewClient(
-			http.MethodGet, copyURL(tgt), encodeGetMuscleRequest, decodeGetMuscleResponse, options...,
+		GetExerciseEndpoint: httptransport.NewClient(
+			http.MethodGet, copyURL(tgt), encodeGetExerciseRequest, decodeGetExerciseResponse, options...,
 		).Endpoint(),
-		SearchMusclesEndpoint: httptransport.NewClient(
-			http.MethodPost, copyURL(tgt), encodeSearchMuscleRequest, decodeSearchMuscleResponse, options...,
+		SearchExercisesEndpoint: httptransport.NewClient(
+			http.MethodPost, copyURL(tgt), encodeSearchExerciseRequest, decodeSearchExerciseResponse, options...,
 		).Endpoint(),
 	}, nil
 }
@@ -61,7 +61,7 @@ func copyURL(u *url.URL) *url.URL {
 }
 
 type HTTPClient struct {
-	*musclesvc.Endpoints
+	*exercisesvc.Endpoints
 }
 
 func NewHTTPClient(svcAddr string) (*HTTPClient, error) {
@@ -74,7 +74,7 @@ func NewHTTPClient(svcAddr string) (*HTTPClient, error) {
 }
 
 func (cli *HTTPClient) PostMuscle(name, description string, tags ...string) (int, error) {
-	req := musclesvc.PostMuscleRequest{
+	req := exercisesvc.PostExerciseRequest{
 		Name:        name,
 		Description: description,
 		Tags:        tags,
@@ -82,48 +82,48 @@ func (cli *HTTPClient) PostMuscle(name, description string, tags ...string) (int
 
 	log.WithFields(log.Fields{"request": req}).Debug("post muscle request")
 
-	resp, err := cli.PostMuscleEndpoint(context.Background(), req)
+	resp, err := cli.PostExerciseEndpoint(context.Background(), req)
 	if err != nil {
 		return 0, fmt.Errorf("endpoint error: [%w]", err)
 	}
 
-	postResp, ok := resp.(musclesvc.PostMuscleResponse)
+	postResp, ok := resp.(exercisesvc.PostExerciseResponse)
 	if !ok {
-		return 0, fmt.Errorf("[%w]: expencted PostMuscleResponse", internal.ErrBadResponse)
+		return 0, fmt.Errorf("[%w]: expencted PostExerciseResponse", internal.ErrBadResponse)
 	}
 
 	return postResp.ID, nil
 }
 
-func (cli *HTTPClient) GetMuscle(id int) (*internal.Muscle, error) {
-	req := musclesvc.GetMuscleRequest{
+func (cli *HTTPClient) GetMuscle(id int) (*internal.Exercise, error) {
+	req := exercisesvc.GetExerciseRequest{
 		ID: id,
 	}
 
-	resp, err := cli.GetMuscleEndpoint(context.Background(), req)
+	resp, err := cli.GetExerciseEndpoint(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 
-	getResp, ok := resp.(musclesvc.GetMuscleResponse)
+	getResp, ok := resp.(exercisesvc.GetExerciseResponse)
 	if !ok {
-		return nil, fmt.Errorf("[%w]: response expected to be GetMuscleResponse", internal.ErrBadResponse)
+		return nil, fmt.Errorf("[%w]: response expected to be GetExerciseResponse", internal.ErrBadResponse)
 	}
 
-	return getResp.Muscle, fmt.Errorf("[%w]: %s", internal.ErrInternalService, getResp.Err)
+	return getResp.Exercise, fmt.Errorf("[%w]: %s", internal.ErrInternalService, getResp.Err)
 }
 
 func (cli *HTTPClient) DeleteMuscle(id int) error {
-	req := musclesvc.DeleteMuscleRequest{
+	req := exercisesvc.DeleteExerciseRequest{
 		ID: id,
 	}
 
-	resp, err := cli.DeleteMuscleEndpoint(context.Background(), req)
+	resp, err := cli.DeleteExerciseEndpoint(context.Background(), req)
 	if err != nil {
 		return err
 	}
 
-	postResp, ok := resp.(musclesvc.DefaultResponse)
+	postResp, ok := resp.(exercisesvc.DefaultResponse)
 	if !ok {
 		return fmt.Errorf("[%w]: response expected to be DefaultResponse", internal.ErrBadResponse)
 	}
@@ -131,20 +131,20 @@ func (cli *HTTPClient) DeleteMuscle(id int) error {
 	return postResp.Err
 }
 
-func (cli *HTTPClient) PutMuscle(m *internal.Muscle) error {
-	req := musclesvc.PutMuscleRequest{
-		ID:     m.ID,
-		Muscle: m,
+func (cli *HTTPClient) PutMuscle(m *internal.Exercise) error {
+	req := exercisesvc.PutExerciseRequest{
+		ID:       m.ID,
+		Exercise: m,
 	}
 
 	log.WithFields(log.Fields{"request": req}).Debug("cli put muscle")
 
-	resp, err := cli.PutMuscleEndpoint(context.Background(), req)
+	resp, err := cli.PutExerciseEndpoint(context.Background(), req)
 	if err != nil {
 		return err
 	}
 
-	putResp, ok := resp.(musclesvc.DefaultResponse)
+	putResp, ok := resp.(exercisesvc.DefaultResponse)
 	if !ok {
 		return fmt.Errorf("[%w]: response expected to be DefaultResponse", internal.ErrBadResponse)
 	}
@@ -152,30 +152,30 @@ func (cli *HTTPClient) PutMuscle(m *internal.Muscle) error {
 	return putResp.Err
 }
 
-func (cli *HTTPClient) SearchMusclesByTags(tags ...string) ([]*internal.Muscle, error) {
+func (cli *HTTPClient) SearchExercisesByTags(tags ...string) ([]*internal.Exercise, error) {
 	if len(tags) == 0 {
 		return nil, fmt.Errorf("[%w]: empty tags", internal.ErrBadRequest)
 	}
 
-	req := musclesvc.SearchMusclesByTagsRequest{Tags: tags}
+	req := exercisesvc.SearchExercisesByTagsRequest{Tags: tags}
 
-	resp, err := cli.SearchMusclesEndpoint(context.Background(), req)
+	resp, err := cli.SearchExercisesEndpoint(context.Background(), req)
 	if err != nil {
 		return nil, err
 	}
 
-	searchResp, ok := resp.(musclesvc.SearchMusclesByTagsResponse)
+	searchResp, ok := resp.(exercisesvc.SearchExercisesByTagsResponse)
 	if !ok {
 		return nil, fmt.Errorf("[%w]: response exptected to be SearchMusclesByTagsResponse", internal.ErrBadResponse)
 	}
 
-	return searchResp.Muscles, searchResp.Err
+	return searchResp.Exercises, searchResp.Err
 }
 
-func encodeDeleteMuscleRequest(ctx context.Context, r *http.Request, request interface{}) error {
-	delReq, ok := request.(musclesvc.DeleteMuscleRequest)
+func encodeDeleteExerciseRequest(ctx context.Context, r *http.Request, request interface{}) error {
+	delReq, ok := request.(exercisesvc.DeleteExerciseRequest)
 	if !ok {
-		return fmt.Errorf("[%w]: request expected to be DeleteMuscleRequest", internal.ErrBadRequest)
+		return fmt.Errorf("[%w]: request expected to be DeleteExerciseRequest", internal.ErrBadRequest)
 	}
 
 	r.URL.Path += "/" + strconv.Itoa(delReq.ID)
@@ -183,23 +183,23 @@ func encodeDeleteMuscleRequest(ctx context.Context, r *http.Request, request int
 	return encodeRequest(ctx, r, request)
 }
 
-func encodePutMuscleRequest(ctx context.Context, r *http.Request, request interface{}) error {
-	putReq, ok := request.(musclesvc.PutMuscleRequest)
+func encodePutExerciseRequest(ctx context.Context, r *http.Request, request interface{}) error {
+	putReq, ok := request.(exercisesvc.PutExerciseRequest)
 	if !ok {
-		return fmt.Errorf("[%w]: request expected to be PutMuscleRequest", internal.ErrBadRequest)
+		return fmt.Errorf("[%w]: request expected to be PutExerciseRequest", internal.ErrBadRequest)
 	}
 
 	r.URL.Path += "/" + strconv.Itoa(putReq.ID)
 
 	log.WithFields(log.Fields{"url": r.URL, "request": putReq}).Debug("encode put muscle request")
 
-	return encodeRequest(ctx, r, putReq.Muscle)
+	return encodeRequest(ctx, r, putReq.Exercise)
 }
 
-func encodeGetMuscleRequest(ctx context.Context, r *http.Request, request interface{}) error {
-	getReq, ok := request.(musclesvc.GetMuscleRequest)
+func encodeGetExerciseRequest(ctx context.Context, r *http.Request, request interface{}) error {
+	getReq, ok := request.(exercisesvc.GetExerciseRequest)
 	if !ok {
-		return fmt.Errorf("[%w]: request exptected to be GetMuscleRequest", internal.ErrBadResponse)
+		return fmt.Errorf("[%w]: request exptected to be GetExerciseRequest", internal.ErrBadResponse)
 	}
 
 	r.URL.Path += "/" + strconv.Itoa(getReq.ID)
@@ -209,7 +209,7 @@ func encodeGetMuscleRequest(ctx context.Context, r *http.Request, request interf
 	return encodeRequest(ctx, r, getReq)
 }
 
-func encodeSearchMuscleRequest(ctx context.Context, r *http.Request, request interface{}) error {
+func encodeSearchExerciseRequest(ctx context.Context, r *http.Request, request interface{}) error {
 	r.URL.Path += "/search"
 
 	return encodeRequest(ctx, r, request)
@@ -226,8 +226,8 @@ func encodeRequest(_ context.Context, req *http.Request, request interface{}) er
 	return nil
 }
 
-func decodePostMuscleResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
-	var addMuscleResp musclesvc.PostMuscleResponse
+func decodePostExerciseResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
+	var addMuscleResp exercisesvc.PostExerciseResponse
 
 	if e := json.NewDecoder(resp.Body).Decode(&addMuscleResp); e != nil {
 		return nil, e
@@ -236,8 +236,8 @@ func decodePostMuscleResponse(ctx context.Context, resp *http.Response) (respons
 	return addMuscleResp, nil
 }
 
-func decodeGetMuscleResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
-	var getMuscleResp musclesvc.GetMuscleResponse
+func decodeGetExerciseResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
+	var getMuscleResp exercisesvc.GetExerciseResponse
 
 	if e := json.NewDecoder(resp.Body).Decode(&getMuscleResp); e != nil {
 		return nil, e
@@ -246,8 +246,8 @@ func decodeGetMuscleResponse(ctx context.Context, resp *http.Response) (response
 	return getMuscleResp, nil
 }
 
-func decodeSearchMuscleResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
-	var searchMuscleResp musclesvc.SearchMusclesByTagsResponse
+func decodeSearchExerciseResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
+	var searchMuscleResp exercisesvc.SearchExercisesByTagsResponse
 
 	if e := json.NewDecoder(resp.Body).Decode(&searchMuscleResp); e != nil {
 		return nil, e
@@ -257,7 +257,7 @@ func decodeSearchMuscleResponse(ctx context.Context, resp *http.Response) (respo
 }
 
 func decodeDefaultResponse(ctx context.Context, resp *http.Response) (response interface{}, err error) {
-	var defResponse musclesvc.DefaultResponse
+	var defResponse exercisesvc.DefaultResponse
 
 	if e := json.NewDecoder(resp.Body).Decode(&defResponse); e != nil {
 		return nil, e

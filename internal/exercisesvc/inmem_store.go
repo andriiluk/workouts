@@ -8,18 +8,18 @@ import (
 )
 
 type InMemStore struct {
-	data  map[int]*internal.Muscle
+	data  map[int]*internal.Exercise
 	mu    sync.RWMutex
 	index int
 }
 
 func NewInMemStore() *InMemStore {
 	return &InMemStore{
-		data: make(map[int]*internal.Muscle),
+		data: make(map[int]*internal.Exercise),
 	}
 }
 
-func (s *InMemStore) InsertOrUpdate(ctx context.Context, m *internal.Muscle) error {
+func (s *InMemStore) InsertOrUpdate(ctx context.Context, m *internal.Exercise) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -36,7 +36,7 @@ func (s *InMemStore) InsertOrUpdate(ctx context.Context, m *internal.Muscle) err
 	return nil
 }
 
-func (s *InMemStore) Get(ctx context.Context, id int) (*internal.Muscle, error) {
+func (s *InMemStore) Get(ctx context.Context, id int) (*internal.Exercise, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -52,14 +52,14 @@ func (s *InMemStore) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-func (s *InMemStore) Search(ctx context.Context, p *internal.Params) ([]*internal.Muscle, error) {
-	var res []*internal.Muscle
+func (s *InMemStore) Search(ctx context.Context, p *internal.Params) ([]*internal.Exercise, error) {
+	var res []*internal.Exercise
 
-	for i, muscle := range s.data {
+	for i, exercise := range s.data {
 		for _, tag := range p.Tags {
 			hasTag := false
 
-			for _, mTag := range muscle.Tags {
+			for _, mTag := range exercise.Tags {
 				if mTag == tag {
 					hasTag = true
 

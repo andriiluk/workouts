@@ -16,18 +16,18 @@ import (
 )
 
 const (
+	// musclesPath = "/"
 	musclesPath = "/muscles"
 )
 
-// MakeHTTPHandler - creates http.Handler with below actions
+// SetHTTPEndpoints - creates http.Handler with below actions
 // POST 	/muscles
 // PUT 		/muscles/:id
 // DELETE 	/muscles/:id
 // GET 		/muscles/:id
 // GET 		/muscles/name/:name
 // POST		/muscles/search
-func MakeHTTPHandler(s Service) http.Handler {
-	r := mux.NewRouter()
+func SetHTTPEndpoints(s Service, r *mux.Router) {
 	e := MakeEndpoints(s)
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorHandler(ErrorLogHandler),
@@ -75,8 +75,6 @@ func MakeHTTPHandler(s Service) http.Handler {
 		encodeResponse,
 		options...,
 	))
-
-	return r
 }
 
 // ENCODERS

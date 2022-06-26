@@ -22,8 +22,10 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/andriiluk/workouts/internal/exercisesvc"
 	"github.com/andriiluk/workouts/internal/musclesvc"
 	"github.com/spf13/cobra"
 )
@@ -34,12 +36,6 @@ const (
 
 // runCmd represents the run command
 var (
-	logLevels = map[string]log.Level{
-		"warn":  log.WarnLevel,
-		"info":  log.InfoLevel,
-		"debug": log.DebugLevel,
-	}
-
 	addr   string
 	runCmd = &cobra.Command{
 		Use:   "run",
@@ -53,6 +49,34 @@ var (
 func init() {
 	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringVarP(&addr, "addr", "a", ":8080", "-a localhost:8080")
+
+	initLogger()
+}
+
+func RunWorkoutSvc() {
+	log.WithField("addr", addr).Info("Run workout service")
+
+	router := mux.NewRouter()
+
+	muscleStore := musclesvc.NewInMemStore()
+	muscleSvc := musclesvc.NewService(muscleStore)
+	muscleSvc = musclesvc.WithLoggingMidleware(muscleSvc)
+	musclesvc.SetHTTPEndpoints(muscleSvc, router)
+
+	exerciseStore := exercisesvc.NewInMemStore()
+	exerciseSvc := exercisesvc.NewService(exerciseStore)
+	exerciseSvc = exercisesvc.WithLoggingMidleware(exerciseSvc)
+	exercisesvc.SetHTTPEndpoints(exerciseSvc, router)
+
+	log.Fatal(http.ListenAndServe(addr, router))
+}
+
+func initLogger() {
+	logLevels := map[string]log.Level{
+		"warn":  log.WarnLevel,
+		"info":  log.InfoLevel,
+		"debug": log.DebugLevel,
+	}
 
 	lvl, ok := logLevels[strings.ToLower(os.Getenv(EnvLogLevel))]
 	if !ok {
@@ -73,16 +97,4 @@ func init() {
 	log.SetReportCaller(true)
 
 	log.WithField("log_level", lvl).Info()
-}
-
-func RunWorkoutSvc() {
-	log.WithField("addr", addr).Info("Run workout service")
-
-	muscleStore := musclesvc.NewInMemStore()
-	muscleSvc := musclesvc.NewService(muscleStore)
-	muscleSvc = musclesvc.WithLoggingMidleware(muscleSvc)
-
-	muscleHandler := musclesvc.MakeHTTPHandler(muscleSvc)
-
-	log.Fatal(http.ListenAndServe(addr, muscleHandler))
 }

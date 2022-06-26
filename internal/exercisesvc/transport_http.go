@@ -17,17 +17,18 @@ import (
 
 const (
 	exercisesPath = "/exercises"
+	// exercisesPath = "/"
 )
 
-// MakeHTTPHandler - creates http.Handler with below actions
+// SetHTTPEndpoints - creates http.Handler with below actions
 // POST 	/exercises
 // PUT 		/exercises/:id
 // DELETE 	/exercises/:id
 // GET 		/exercises/:id
 // GET 		/exercises/name/:name
 // POST		/exercises/search
-func MakeHTTPHandler(s Service) http.Handler {
-	r := mux.NewRouter()
+func SetHTTPEndpoints(s Service, r *mux.Router) {
+	// r := mux.NewRouter()
 	e := MakeEndpoints(s)
 	options := []httptransport.ServerOption{
 		httptransport.ServerErrorHandler(ErrorLogHandler),
@@ -82,8 +83,6 @@ func MakeHTTPHandler(s Service) http.Handler {
 		encodeResponse,
 		options...,
 	))
-
-	return r
 }
 
 // ENCODERS

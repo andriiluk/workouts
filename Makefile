@@ -1,5 +1,6 @@
+logLvl = debug
 run:
-	go run . run
+	export WORKOUTSVC_LOG_LEVEL=$(logLvl) && go run . run
 
 lint:
 	golangci-lint run
