@@ -1,6 +1,8 @@
 package musclesvc
 
-import "github.com/andriiluk/workouts/internal"
+import (
+	"github.com/andriiluk/workouts/internal"
+)
 
 type PostMuscleRequest struct {
 	Name        string   `json:"name,omitempty"`
@@ -19,7 +21,7 @@ type GetMuscleRequest struct {
 }
 
 type GetMuscleResponse struct {
-	Err    error            `json:"err,omitempty"`
+	Err    string           `json:"err,omitempty"`
 	Muscle *internal.Muscle `json:"muscle,omitempty"`
 }
 

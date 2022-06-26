@@ -1,151 +1,160 @@
 package exercisesvc
 
-// import (
-// 	"context"
-// 	"strings"
+import (
+	"context"
 
-// 	"github.com/andriiluk/workouts/internal"
-// 	"github.com/go-kit/kit/endpoint"
-// )
+	"fmt"
 
-// type Endpoints struct {
-// 	AddExercise     endpoint.Endpoint
-// 	PutExercise     endpoint.Endpoint
-// 	DeleteExercise  endpoint.Endpoint
-// 	GetExercise     endpoint.Endpoint
-// 	SearchExercises endpoint.Endpoint
-// }
+	"strings"
 
-// func MakeEndpoints(svc Service) *Endpoints {
-// 	return &Endpoints{
-// 		AddExercise:     makeAddExerciseEndpoint(svc),
-// 		PutExercise:     makePutExerciseEndpoint(svc),
-// 		DeleteExercise:  makeDeleteExerciseEndpoint(svc),
-// 		GetExercise:     makeGetExerciseEndpoint(svc),
-// 		SearchExercises: makeSearchExerciseEndpoint(svc),
-// 	}
-// }
+	"github.com/go-kit/kit/endpoint"
 
-// func makeAddExerciseEndpoint(svc Service) endpoint.Endpoint {
-// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-// 		req := request.(addExerciseRequest)
+	"github.com/andriiluk/workouts/internal"
+)
 
-// 		id, err := svc.AddExercise(ctx, &internal.Exercise{
-// 			Name:        req.Name,
-// 			Description: req.Description,
-// 			Tags:        req.Tags,
-// 			Muscles:     req.Muscles,
-// 		})
+type Endpoints struct {
+	PostExerciseEndpoint          endpoint.Endpoint
+	PutExerciseEndpoint           endpoint.Endpoint
+	DeleteExerciseEndpoint        endpoint.Endpoint
+	GetExerciseEndpoint           endpoint.Endpoint
+	SearchExercisesEndpoint       endpoint.Endpoint
+	GetExercisesByMusclesEndpoint endpoint.Endpoint
+}
 
-// 		return addExerciseResponse{
-// 			Err: err,
-// 			ID:  id,
-// 		}, nil
-// 	}
-// }
+func MakeEndpoints(svc Service) *Endpoints {
+	return &Endpoints{
+		PostExerciseEndpoint:          makePostExerciseEndpoint(svc),
+		PutExerciseEndpoint:           makePutExerciseEndpoint(svc),
+		DeleteExerciseEndpoint:        makeDeleteExerciseEndpoint(svc),
+		GetExerciseEndpoint:           makeGetExerciseEndpoint(svc),
+		SearchExercisesEndpoint:       makeSearchExerciseEndpoint(svc),
+		GetExercisesByMusclesEndpoint: makeGetExercisesByMusclesEndpoint(svc),
+	}
+}
 
-// func makePutExerciseEndpoint(svc Service) endpoint.Endpoint {
-// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-// 		req := request.(putExerciseRequest)
+func makePostExerciseEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		var resp PostExerciseResponse
 
-// 		err = svc.PutExercise(ctx, &internal.Exercise{
-// 			ID:          req.ID,
-// 			Name:        req.Exercise.Name,
-// 			Description: req.Exercise.Description,
-// 			Tags:        req.Exercise.Tags,
-// 			Muscles:     req.Exercise.Muscles,
-// 		})
+		req, ok := request.(PostExerciseRequest)
+		if !ok {
+			return nil, fmt.Errorf("[%w] request exptected to be PostExerciseRequest", internal.ErrBadRequest)
+		}
 
-// 		return defaultResponse{
-// 			Err: err,
-// 		}, nil
-// 	}
-// }
+		if strings.TrimSpace(req.Name) == "" {
+			return PostExerciseResponse{
+				Err: fmt.Sprintf("[%s]: 'Name'", internal.ErrMissingRequiredParams),
+			}, nil
+		}
 
-// func makeDeleteExerciseEndpoint(svc Service) endpoint.Endpoint {
-// 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-// 		req := request.(deleteExerciseRequest)
-// 		resp := defaultResponse{}
+		id, err := svc.AddExercise(ctx, &internal.Exercise{
+			Name:        req.Name,
+			Description: req.Description,
+			Tags:        req.Tags,
+			Muscles:     req.Muscles,
+		})
 
-// 		switch {
-// 		case req.ID != 0:
-// 			resp.Err = svc.DeleteExerciseByID(ctx, req.ID)
-// 		case strings.TrimSpace(req.Name) != "":
-// 			resp.Err = svc.DeleteExerciseByName(ctx, req.Name)
-// 		}
+		if err != nil {
+			resp.Err = err.Error()
+		}
 
-// 		return resp, nil
-// 	}
-// }
+		resp.ID = id
 
-// func makeGetExerciseEndpoint(svc Service) endpoint.Endpoint {
-// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-// 		req := request.(getExerciseRequest)
-// 		resp := getExerciseResponse{}
+		return resp, nil
+	}
+}
 
-// 		switch {
-// 		case req.ID != 0:
-// 			resp.Exercise, resp.Err = svc.GetExerciseByID(ctx, req.ID)
-// 		case strings.TrimSpace(req.Name) != "":
-// 			resp.Exercise, resp.Err = svc.GetExerciseByName(ctx, req.Name)
-// 		}
+func makePutExerciseEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req, ok := request.(PutExerciseRequest)
+		if !ok {
+			return nil, internal.ErrBadRequest
+		}
 
-// 		return resp, nil
-// 	}
-// }
+		err = svc.PutExercise(ctx, &internal.Exercise{
+			ID:          req.ID,
+			Name:        req.Exercise.Name,
+			Description: req.Exercise.Description,
+			Tags:        req.Exercise.Tags,
+		})
 
-// func makeSearchExerciseEndpoint(svc Service) endpoint.Endpoint {
-// 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-// 		req := request.(searchExercisesByTagsRequest)
-// 		resp := searchExercisesByTagsResponse{}
+		return DefaultResponse{
+			Err: err,
+		}, nil
+	}
+}
 
-// 		resp.Exercises, resp.Err = svc.GetExercisesByTags(ctx, req.Tags...)
+func makeDeleteExerciseEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req, ok := request.(DeleteExerciseRequest)
+		if !ok {
+			return nil, internal.ErrBadRequest
+		}
 
-// 		return resp, nil
-// 	}
-// }
+		resp := DefaultResponse{}
 
-// type addExerciseRequest struct {
-// 	Name        string             `json:"name,omitempty"`
-// 	Description string             `json:"description,omitempty"`
-// 	Tags        []*internal.Tag    `json:"tags,omitempty"`
-// 	Muscles     []*internal.Muscle `json:"muscles,omitempty"`
-// }
+		switch {
+		case req.ID != 0:
+			resp.Err = svc.DeleteExerciseByID(ctx, req.ID)
+		case strings.TrimSpace(req.Name) != "":
+			resp.Err = svc.DeleteExerciseByName(ctx, req.Name)
+		}
 
-// type addExerciseResponse struct {
-// 	Err error
-// 	ID  int
-// }
+		return resp, nil
+	}
+}
 
-// type putExerciseRequest struct {
-// 	Exercise internal.Exercise
-// 	ID       int
-// }
+func makeGetExerciseEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req, ok := request.(GetExerciseRequest)
+		if !ok {
+			return nil, internal.ErrBadRequest
+		}
 
-// type deleteExerciseRequest struct {
-// 	ID   int    `json:"id,omitempty"`
-// 	Name string `json:"name,omitempty"`
-// }
+		resp := GetExerciseResponse{}
 
-// type getExerciseRequest struct {
-// 	ID   int    `json:"id,omitempty"`
-// 	Name string `json:"name,omitempty"`
-// }
+		switch {
+		case req.ID != 0:
+			resp.Exercise, resp.Err = svc.GetExerciseByID(ctx, req.ID)
+		case strings.TrimSpace(req.Name) != "":
+			resp.Exercise, resp.Err = svc.GetExerciseByName(ctx, req.Name)
+		}
 
-// type getExerciseResponse struct {
-// 	Err      error              `json:"err,omitempty"`
-// 	Exercise *internal.Exercise `json:"exercises,omitempty"`
-// }
+		return resp, nil
+	}
+}
 
-// type searchExercisesByTagsRequest struct {
-// 	Tags []*internal.Tag `json:"tags,omitempty"`
-// }
+func makeSearchExerciseEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req, ok := request.(SearchExercisesByTagsRequest)
+		if !ok {
+			return nil, fmt.Errorf("[%w]: request expected to be SearchExercisesByTagsRequest", internal.ErrBadRequest)
+		}
 
-// type searchExercisesByTagsResponse struct {
-// 	Err       error                `json:"err,omitempty"`
-// 	Exercises []*internal.Exercise `json:"exercises,omitempty"`
-// }
+		resp := SearchExercisesByTagsResponse{}
 
-// type defaultResponse struct {
-// 	Err error `json:"err,omitempty"`
-// }
+		resp.Exercises, resp.Err = svc.GetExercisesByTags(ctx, req.Tags...)
+
+		return resp, nil
+	}
+}
+
+func makeGetExercisesByMusclesEndpoint(svc Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		req, ok := request.(GetExercisesByMusclesRequest)
+		if !ok {
+			return nil, fmt.Errorf("[%w]: request expected to be SearchExercisesByTagsRequest", internal.ErrBadRequest)
+		}
+
+		exercises, err := svc.GetExercisesByMuscles(ctx, req.Muscles...)
+		if err != nil {
+			return GetExercisesByMusclesResponse{
+				Err: err.Error(),
+			}, nil
+		}
+
+		return GetExercisesByMusclesResponse{
+			Exercises: exercises,
+		}, nil
+	}
+}

@@ -6,7 +6,9 @@
 3. Workouts
 4. Workout routines
 
-TODO:
+## TODO
+1. 
+## TODO (interesting to try):
 1. Create Orb in CircleCI [ ]
 2. Retag 'v0.1-release' tag in CircleCI and make ArgoCD watch 'v0.1-release' and run updates.
-3.
+3. Try using Custom Resource Definition CRD for configuration

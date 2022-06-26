@@ -50,7 +50,6 @@ var (
 	}
 )
 
-//nolint
 func init() {
 	rootCmd.AddCommand(runCmd)
 	runCmd.Flags().StringVarP(&addr, "addr", "a", ":8080", "-a localhost:8080")
