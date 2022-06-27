@@ -1,4 +1,6 @@
 version: 2.1
+orbs:
+  golangci-lint: timakin/golangci-lint@volatile
 jobs:
   build:
     working_directory: ~/repo
@@ -9,9 +11,7 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
-      - run:
-          name: Run linter
-          command: make lint
+      - golangci-lint/lint
       - restore_cache:
           keys:
             - go-mod-v0-{{ checksum "go.sum" }}
@@ -48,5 +48,3 @@ jobs:
       #     command: |
       #       git tag -f v0.1-release
       #       git push origin v0.1-release --force
-
-
