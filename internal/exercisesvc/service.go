@@ -66,6 +66,7 @@ func (s *service) GetExercisesByTags(ctx context.Context, tags ...string) ([]*in
 }
 
 func (s *service) GetExercisesByMuscles(ctx context.Context, muscleNames ...string) ([]*internal.Exercise, error) {
-	// todo: get exercise by muscle
-	panic("not implemented yet")
+	return s.store.Search(ctx, &internal.Params{
+		Muscles: muscleNames,
+	})
 }

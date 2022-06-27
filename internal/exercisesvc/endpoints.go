@@ -76,6 +76,7 @@ func makePutExerciseEndpoint(svc Service) endpoint.Endpoint {
 			Name:        req.Exercise.Name,
 			Description: req.Exercise.Description,
 			Tags:        req.Exercise.Tags,
+			Muscles:     req.Exercise.Muscles,
 		})
 
 		return DefaultResponse{

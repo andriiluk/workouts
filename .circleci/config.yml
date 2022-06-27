@@ -9,6 +9,9 @@ jobs:
           password: $DOCKERHUB_PASSWORD
     steps:
       - checkout
+      - run:
+          name: Run linter
+          command: make lint
       - restore_cache:
           keys:
             - go-mod-v0-{{ checksum "go.sum" }}

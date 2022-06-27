@@ -37,9 +37,10 @@ type Tag struct {
 }
 
 type Params struct {
-	ID   int
-	Name string
-	Tags []string
+	ID      int
+	Name    string
+	Tags    []string
+	Muscles []string
 }
 
 type Muscle struct {
